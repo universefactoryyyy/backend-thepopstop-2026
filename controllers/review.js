@@ -43,7 +43,7 @@ exports.getProductReviews = async (req, res, next) => {
     })
 }
 
-// Can the logged in customer review this product, and have they already?   GET /api/v1/review/eligibility?productId=...
+// Can the logged in shopper review this product, and have they already?   GET /api/v1/review/eligibility?productId=...
 exports.getReviewEligibility = async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.query.productId)) {
         return res.status(400).json({ message: 'A valid productId is required' });
@@ -58,8 +58,8 @@ exports.getReviewEligibility = async (req, res, next) => {
     })
 }
 
-// Create OR edit the logged in customer's review of a product   =>  PUT /api/v1/review
-// Only customers with a delivered order containing the product may review (FR4.1); authors may edit it later (FR4.2).
+// Create OR edit the logged in shopper's review of a product   =>  PUT /api/v1/review
+// Anyone with a delivered order containing the product may review (including admin); authors may edit it later.
 exports.createProductReview = async (req, res, next) => {
     const { productId, comment } = req.body;
     const anonymous = req.body.anonymous === true || req.body.anonymous === 'true';

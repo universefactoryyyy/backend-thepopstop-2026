@@ -484,6 +484,22 @@ const run = async () => {
         assert.strictEqual(p.ratings, 0);
         assert.strictEqual(p.numOfReviews, 0);
     });
+    await step('admin can review products from their own delivered orders', async () => {
+        assert.strictEqual((await admin.get(`/review/eligibility?productId=${wolverine._id}`)).data.canReview, false);
+        await admin.post('/cart', { productId: wolverine._id, quantity: 1 });
+        const placed = await admin.post('/order/new', {
+            shippingInfo: { address: 'Admin HQ', phoneNo: '09999999999', postalCode: '1000' },
+            paymentMethod: 'Cash on Delivery',
+        });
+        assert.strictEqual(placed.status, 201, JSON.stringify(placed.data));
+        await admin.put(`/admin/order/${placed.data.order._id}`, { status: 'Processing' });
+        await admin.put(`/admin/order/${placed.data.order._id}`, { status: 'Shipped' });
+        await admin.put(`/admin/order/${placed.data.order._id}`, { status: 'Delivered' });
+        assert.strictEqual((await admin.get(`/review/eligibility?productId=${wolverine._id}`)).data.canReview, true);
+        const created = await admin.put('/review', { productId: wolverine._id, rating: 5, comment: 'Bought this myself' });
+        assert.strictEqual(created.status, 201, JSON.stringify(created.data));
+        assert.strictEqual(created.data.review.rating, 5);
+    });
 
     // ---------- cancel restores stock ----------
     await step('cancelling an order restores stock and discount usage', async () => {
