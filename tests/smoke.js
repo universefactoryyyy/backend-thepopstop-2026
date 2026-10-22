@@ -525,15 +525,14 @@ const run = async () => {
         assert.strictEqual((await admin.put(`/admin/user/${adminUser._id}`, { isActive: false })).status, 400);
         assert.strictEqual((await admin.del(`/admin/user/${adminUser._id}`)).status, 400);
         assert.strictEqual((await admin.put(`/admin/user/${cara._id}`, { role: 'superuser' })).status, 400);
-        const promoted = await admin.put(`/admin/user/${cara._id}`, { role: 'admin' });
-        assert.strictEqual(promoted.data.user.role, 'admin');
-        assert.strictEqual((await cust1.get('/admin/stats')).status, 200);
+        assert.strictEqual((await admin.put(`/admin/user/${cara._id}`, { role: 'admin' })).status, 400);
         await admin.put(`/admin/user/${cara._id}`, { role: 'customer', isActive: false });
         assert.strictEqual((await cust1.get('/me')).status, 403);
         assert.strictEqual((await guest.post('/login', { idToken: 'tok-cust1' })).status, 403);
         await admin.put(`/admin/user/${cara._id}`, { isActive: true });
         assert.strictEqual((await cust1.get('/me')).status, 200);
         assert.strictEqual((await admin.put(`/admin/user/${cara._id}`, { role: 'employee' })).data.user.role, 'employee');
+        assert.strictEqual((await admin.put(`/admin/user/${cara._id}`, { role: 'admin' })).status, 400);
         assert.strictEqual((await cust1.get('/admin/products')).status, 403);
         assert.strictEqual((await cust1.get('/admin/orders')).status, 200);
         assert.strictEqual((await cust1.get(`/order/${order1._id}`)).status, 200);

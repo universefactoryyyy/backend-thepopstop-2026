@@ -270,6 +270,9 @@ exports.updateUser = async (req, res, next) => {
     if (role !== undefined) {
         if (!['customer', 'employee', 'admin'].includes(role)) return res.status(400).json({ message: 'Role must be customer, employee, or admin' });
         if (isSelf && role !== user.role) return res.status(400).json({ message: 'You cannot change your own role' });
+        if (role === 'admin' && user.role !== 'admin') {
+            return res.status(400).json({ message: 'A customer can only be changed to employee' });
+        }
         user.role = role;
     }
     if (isActive !== undefined) {
