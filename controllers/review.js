@@ -17,8 +17,10 @@ const updateProductRating = async (productId) => {
 }
 
 // The delivered order that proves the customer bought this product (null when they never received it)
-const findPurchase = (userId, productId) =>
-    Order.findOne({ user: userId, orderStatus: 'Delivered', 'orderItems.product': productId }).sort({ createdAt: -1 });
+const findPurchase = (userId, productId) => {
+    const id = mongoose.isValidObjectId(productId) ? new mongoose.Types.ObjectId(String(productId)) : productId;
+    return Order.findOne({ user: userId, orderStatus: 'Delivered', 'orderItems.product': id }).sort({ createdAt: -1 });
+}
 
 // Shoppers never receive the author's name or photo when the review is anonymous.
 const forShoppers = (review) => {
