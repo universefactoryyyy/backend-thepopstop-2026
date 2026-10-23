@@ -6,8 +6,12 @@ const sendEmail = async options => {
     const user = process.env.SMTP_EMAIL;
     const fromEmail = process.env.SMTP_FROM_EMAIL || user;
 
-    if (!user || !process.env.SMTP_PASSWORD) {
+    const pass = process.env.SMTP_PASSWORD || '';
+    if (!user || !pass) {
         throw new Error('Gmail SMTP is not configured (SMTP_EMAIL / SMTP_PASSWORD)');
+    }
+    if (/yourgmail|your_16_character|mailtrap/i.test(`${user}${pass}`)) {
+        throw new Error('Gmail SMTP still has placeholder values. Put your real Gmail and App Password in SMTP_EMAIL / SMTP_PASSWORD');
     }
 
     const transporter = nodemailer.createTransport({
