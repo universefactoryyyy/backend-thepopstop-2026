@@ -12,11 +12,6 @@ const { checkDiscountCode, reserveDiscountUse, releaseDiscountUse } = require('.
 
 const FINAL_STATUSES = ['Delivered', 'Cancelled'];
 
-const backendOrigin = () => {
-    if (process.env.BACKEND_URL) return process.env.BACKEND_URL.replace(/\/$/, '');
-    return `http://localhost:${process.env.PORT || 4001}`;
-}
-
 // Older orders have no token until the next email. select:false means it must be loaded explicitly.
 const ensureReceiptToken = async (order) => {
     if (order.receiptToken) return order.receiptToken;
@@ -30,17 +25,16 @@ const ensureReceiptToken = async (order) => {
     return order.receiptToken;
 }
 
-// Emails the customer the order details with the PDF receipt attached and a download button.
+// Emails the customer the order details with the PDF receipt attached.
 // Never throws: a mail problem must not undo an order / status change.
 const emailOrder = async (order, subject, buildHtml) => {
     try {
-        const token = await ensureReceiptToken(order);
-        const downloadUrl = `${backendOrigin()}/api/v1/order/${order._id}/receipt/file?token=${token}`;
+        await ensureReceiptToken(order);
         const pdfBuffer = await generateOrderReceipt(order);
         await sendEmail({
             email: order.user.email,
             subject,
-            html: buildHtml(downloadUrl),
+            html: buildHtml(),
             attachments: [{
                 filename: `receipt-order-${orderNumber(order)}.pdf`,
                 content: pdfBuffer,
@@ -156,7 +150,7 @@ exports.newOrder = async (req, res, next) => {
 
     const sendConfirmation = async () => {
         order.user = req.user;
-        const email = await emailOrder(order, 'Order Confirmed - The Pop Stop', (downloadUrl) => orderConfirmationEmail(req.user, order, downloadUrl));
+        const email = await emailOrder(order, 'Order Confirmed - The Pop Stop', () => orderConfirmationEmail(req.user, order));
         order.depopulate('user');
         return email;
     };
@@ -313,7 +307,7 @@ exports.updateOrder = async (req, res, next) => {
     const sendUpdate = () => emailOrder(
         order,
         `Order #${orderNumber(order)} Status Update - The Pop Stop`,
-        (downloadUrl) => orderStatusUpdateEmail(order.user, order, status, downloadUrl)
+        () => orderStatusUpdateEmail(order.user, order, status)
     );
 
     if (process.env.NODE_ENV === 'test') {

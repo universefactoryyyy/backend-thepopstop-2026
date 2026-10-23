@@ -385,8 +385,7 @@ const run = async () => {
         assert.ok(mail.attachments[0].filename.endsWith('.pdf'));
         assert.strictEqual(mail.attachments[0].contentDisposition, 'attachment');
         assert.strictEqual(mail.attachments[0].content.slice(0, 4).toString(), '%PDF');
-        assert.ok(mail.html.includes('Download PDF receipt'));
-        assert.ok(mail.html.includes('/receipt/file?token='));
+        assert.ok(mail.html.includes('A PDF receipt is attached'));
         assert.strictEqual(order1.receiptToken, undefined);
         const Order = require('../models/order');
         const stored = await Order.findById(order1._id).select('+receiptToken');

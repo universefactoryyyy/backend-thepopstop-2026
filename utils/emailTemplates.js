@@ -88,13 +88,7 @@ const buildShipping = (order) => {
       </div>`;
 };
 
-const receiptDownload = (downloadUrl) => `
-      <p style="margin:24px 0 0;">
-        <a href="${escapeHtml(downloadUrl)}" style="display:inline-block;background:#6FAE88;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold;">Download PDF receipt</a>
-      </p>
-      <p style="margin:12px 0 0;font-size:13px;color:#5F7F6C;">The same PDF is attached to this email. Open the attachment, or use the button above, to save your receipt.</p>`
-
-exports.orderConfirmationEmail = (user, order, downloadUrl) => {
+exports.orderConfirmationEmail = (user, order) => {
     const body = `
       <p style="margin:0 0 12px;font-size:15px;">Dear <strong>${escapeHtml(user.name)}</strong>,</p>
       <p style="margin:0 0 20px;font-size:15px;">Thank you for your order! Your order <strong>#${orderNumber(order)}</strong> has been placed successfully.</p>
@@ -106,11 +100,11 @@ exports.orderConfirmationEmail = (user, order, downloadUrl) => {
       ${buildShipping(order)}
       <p style="margin:24px 0 0;font-size:14px;color:#5F7F6C;">Payment Method: <strong>${escapeHtml((order.paymentInfo && order.paymentInfo.method) || 'N/A')}</strong></p>
       <p style="margin:16px 0 0;font-size:14px;">Thank you for shopping with The Pop Stop!</p>
-      ${receiptDownload(downloadUrl)}`;
+      <p style="margin:16px 0 0;font-size:13px;color:#5F7F6C;">A PDF receipt is attached to this email.</p>`;
     return baseTemplate('Order Confirmed', body);
 };
 
-exports.orderStatusUpdateEmail = (user, order, status, downloadUrl) => {
+exports.orderStatusUpdateEmail = (user, order, status) => {
     const body = `
       <p style="margin:0 0 12px;font-size:15px;">Dear <strong>${escapeHtml(user.name)}</strong>,</p>
       <p style="margin:0 0 20px;font-size:15px;">Your order <strong>#${orderNumber(order)}</strong> status has been updated to:</p>
@@ -121,7 +115,7 @@ exports.orderStatusUpdateEmail = (user, order, status, downloadUrl) => {
       ${buildOrderTotals(order)}
       ${buildShipping(order)}
       <p style="margin:24px 0 0;font-size:14px;">Thank you for shopping with The Pop Stop!</p>
-      ${receiptDownload(downloadUrl)}
+      <p style="margin:16px 0 0;font-size:13px;color:#5F7F6C;">A PDF receipt is attached to this email.</p>
       <p style="margin:8px 0 0;font-size:13px;color:#8FA89A;">If you have any questions, please contact us.</p>`;
     return baseTemplate('Order Status Update', body);
 };
