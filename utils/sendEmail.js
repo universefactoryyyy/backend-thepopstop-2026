@@ -6,11 +6,18 @@ const sendEmail = async options => {
     const user = process.env.SMTP_EMAIL;
     const fromEmail = process.env.SMTP_FROM_EMAIL || user;
 
+    if (!user || !process.env.SMTP_PASSWORD) {
+        throw new Error('Gmail SMTP is not configured (SMTP_EMAIL / SMTP_PASSWORD)');
+    }
+
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port,
         secure: port === 465,
         requireTLS: port === 587,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
         auth: {
             user,
             pass: process.env.SMTP_PASSWORD
