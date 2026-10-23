@@ -2,13 +2,14 @@
  * End-to-end smoke test (npm test).
  * Runs the real Express app + seed script against an in-memory MongoDB.
  * Only the three external services are replaced with stubs: Firebase token verification,
- * Cloudinary uploads and the SMTP transport - so no accounts or credentials are needed.
+ * Cloudinary uploads and the Brevo mail API - so no accounts or credentials are needed.
  */
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test_secret_for_smoke_test_only';
 process.env.FRONTEND_URL = 'http://localhost:5173';
-process.env.SMTP_FROM_NAME = 'The Pop Stop';
-process.env.SMTP_FROM_EMAIL = 'noreply@popstop.test';
+process.env.BREVO_API_KEY = 'test-brevo-key';
+process.env.BREVO_FROM_NAME = 'The Pop Stop';
+process.env.BREVO_FROM_EMAIL = 'noreply@popstop.test';
 process.env.CLOUDINARY_CLOUD_NAME = 'test';
 process.env.CLOUDINARY_API_KEY = 'test';
 process.env.CLOUDINARY_API_SECRET = 'test';
@@ -43,9 +44,25 @@ cloudinary.v2.uploader.upload = async (file, options = {}) => {
 };
 cloudinary.v2.uploader.destroy = async (id) => { destroyed.push(id); return { result: 'ok' }; };
 
-const nodemailer = require('nodemailer');
 const mails = [];
-nodemailer.createTransport = () => ({ sendMail: async (message) => { mails.push(message); return {}; } });
+const originalFetch = global.fetch.bind(global);
+global.fetch = async (url, init = {}) => {
+    if (String(url).includes('api.brevo.com')) {
+        const body = JSON.parse(init.body);
+        mails.push({
+            to: body.to[0].email,
+            subject: body.subject,
+            html: body.htmlContent,
+            attachments: (body.attachment || []).map((file) => ({
+                filename: file.name,
+                content: Buffer.from(file.content, 'base64'),
+                contentDisposition: 'attachment',
+            })),
+        });
+        return { ok: true, status: 201, json: async () => ({ messageId: 'test' }) };
+    }
+    return originalFetch(url, init);
+};
 
 // ---------- tiny test helpers ----------
 let passed = 0;

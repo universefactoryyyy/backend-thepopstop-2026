@@ -17,10 +17,8 @@ configureCloudinary();
 
 if (!isCloudinaryConfigured()) console.warn('WARNING: Cloudinary is not configured - image uploads will fail.');
 if (!isFirebaseConfigured()) console.warn('WARNING: Firebase Admin is not configured - login/registration will fail.');
-const smtpReady = process.env.SMTP_HOST && process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD
-    && !/yourgmail|your_16_character|mailtrap/i.test(`${process.env.SMTP_EMAIL}${process.env.SMTP_PASSWORD}`);
-if (!smtpReady) {
-    console.warn('WARNING: Gmail SMTP is not configured - order emails will fail. Set SMTP_EMAIL and SMTP_PASSWORD (App Password) in .env and on Render.');
+if (!(process.env.BREVO_API_KEY || '').trim() || !process.env.BREVO_FROM_EMAIL) {
+    console.warn('WARNING: Brevo is not configured - order emails will fail. Set BREVO_API_KEY and BREVO_FROM_EMAIL.');
 }
 
 const PORT = process.env.PORT || 4001;

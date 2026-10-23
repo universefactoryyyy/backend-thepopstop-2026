@@ -1,15 +1,16 @@
 /*
  * Local UI harness (node tests/ui-harness.js) - NOT part of the real app.
  * Starts the real API on http://localhost:4001 against an in-memory MongoDB, seeded with the PopStop data,
- * with Cloudinary / Firebase / SMTP replaced by local stubs, so the React app can be clicked through
+ * with Cloudinary / Firebase / Brevo replaced by local stubs, so the React app can be clicked through
  * without any account. It also adds:
  *   GET /dev-login?role=admin|customer   -> sets the session cookie (open it once in the browser)
  */
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'ui_harness_secret';
 process.env.FRONTEND_URL = 'http://localhost:5173';
-process.env.SMTP_FROM_NAME = 'The Pop Stop';
-process.env.SMTP_FROM_EMAIL = 'noreply@popstop.test';
+process.env.BREVO_API_KEY = 'test-brevo-key';
+process.env.BREVO_FROM_NAME = 'The Pop Stop';
+process.env.BREVO_FROM_EMAIL = 'noreply@popstop.test';
 process.env.CLOUDINARY_CLOUD_NAME = 'test';
 process.env.CLOUDINARY_API_KEY = 'test';
 process.env.CLOUDINARY_API_SECRET = 'test';
@@ -37,13 +38,15 @@ cloudinary.v2.uploader.upload = async (file, options = {}) => {
 };
 cloudinary.v2.uploader.destroy = async () => ({ result: 'ok' });
 
-const nodemailer = require('nodemailer');
-nodemailer.createTransport = () => ({
-    sendMail: async (message) => {
-        console.log(`[mail] to=${message.to} subject="${message.subject}" attachments=${(message.attachments || []).map(a => a.filename).join(',')}`);
-        return {};
-    },
-});
+const originalFetch = global.fetch.bind(global);
+global.fetch = async (url, init = {}) => {
+    if (String(url).includes('api.brevo.com')) {
+        const body = JSON.parse(init.body);
+        console.log(`[mail] to=${body.to[0].email} subject="${body.subject}" attachments=${(body.attachment || []).map(a => a.name).join(',')}`);
+        return { ok: true, status: 201, json: async () => ({ messageId: 'test' }) };
+    }
+    return originalFetch(url, init);
+};
 
 (async () => {
     const mongod = await MongoMemoryServer.create();

@@ -161,7 +161,7 @@ exports.newOrder = async (req, res, next) => {
         return email;
     };
 
-    // tests wait for the mail stub; live checkout must not sit on Gmail + PDF
+    // tests wait for the mail stub; live checkout must not sit on PDF + email
     if (process.env.NODE_ENV === 'test') {
         return res.status(201).json({
             success: true,
