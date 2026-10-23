@@ -17,7 +17,9 @@ configureCloudinary();
 
 if (!isCloudinaryConfigured()) console.warn('WARNING: Cloudinary is not configured - image uploads will fail.');
 if (!isFirebaseConfigured()) console.warn('WARNING: Firebase Admin is not configured - login/registration will fail.');
-if (!process.env.SMTP_HOST) console.warn('WARNING: SMTP (Mailtrap) is not configured - order emails will fail.');
+if (!process.env.SMTP_HOST || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+    console.warn('WARNING: Gmail SMTP is not configured - order emails will fail.');
+}
 
 const PORT = process.env.PORT || 4001;
 app.listen(PORT, () => {
